@@ -1,4 +1,4 @@
-﻿using System.Collections.ObjectModel;
+using System.Collections.ObjectModel;
 using System.IO;
 
 namespace Counter;
@@ -18,7 +18,14 @@ public partial class MainPage : ContentPage
 
     private void SaveCountersToFile()
     {
-        var lines = _counters.Select(c => $"{c.Name}|{c.Value}").ToList();
+        var lines = new List<string>();
+
+        foreach (var counter in _counters)
+        {
+            lines.Add(counter.Name);           // Pierwsza linia: nazwa
+            lines.Add(counter.Value.ToString()); // Druga linia: wartość
+        }
+
         File.WriteAllLines(_filePath, lines);
     }
 
@@ -27,52 +34,45 @@ public partial class MainPage : ContentPage
         if (File.Exists(_filePath))
         {
             var lines = File.ReadAllLines(_filePath);
-            foreach (var line in lines)
+
+            for (int i = 0; i < lines.Length; i += 2)
             {
-                var parts = line.Split('|');
-                if (parts.Length == 2 && int.TryParse(parts[1], out int value))
+                if (i + 1 < lines.Length && int.TryParse(lines[i + 1], out int value))
                 {
-                    var counter = new CounterModel(parts[0]) { Value = value };
+                    var counter = new CounterModel(lines[i]) { Value = value };
                     _counters.Add(counter);
-                    AddCounterToUI(counter); 
+                    AddCounterToUI(counter);
                 }
             }
         }
     }
 
     private async void OnAddCounterClicked(object sender, EventArgs e)
+{
+    string counterName = await DisplayPromptAsync("New Counter", "Provide a name for the counter:", initialValue: "Counter");
+
+    if (string.IsNullOrWhiteSpace(counterName))
     {
-        string input = await DisplayPromptAsync("New Counter", "Provide a name and initial value for the counter in the format: Name|Value:", initialValue: "Counter|0");
-
-        if (string.IsNullOrWhiteSpace(input))
-        {
-            await DisplayAlert("Error", "Name and initial value of the counter can't be empty!", "OK");
-            return;
-        }
-
-        var parts = input.Split('|');
-
-        if (parts.Length != 2 || string.IsNullOrWhiteSpace(parts[0]))
-        {
-            await DisplayAlert("Error", "You must provide both the counter name and the initial value in the format: name|value", "OK");
-            return;
-        }
-
-        string counterName = parts[0];
-
-        if (!int.TryParse(parts[1], out int initialValue))
-        {
-            await DisplayAlert("Error", "Initial value must be a number!", "OK");
-            return;
-        }
-
-        var newCounter = new CounterModel(counterName) { Value = initialValue };
-
-        _counters.Add(newCounter);
-        AddCounterToUI(newCounter);
-
-        SaveCountersToFile();
+        await DisplayAlert("Error", "The counter name can't be empty!", "OK");
+        return;
     }
+
+    string valueInput = await DisplayPromptAsync("New Counter", "Provide an initial value for the counter:", initialValue: "0");
+
+    if (!int.TryParse(valueInput, out int initialValue))
+    {
+        await DisplayAlert("Error", "Initial value must be a valid number!", "OK");
+        return;
+    }
+
+    var newCounter = new CounterModel(counterName) { Value = initialValue };
+
+    _counters.Add(newCounter);
+    AddCounterToUI(newCounter);
+
+    SaveCountersToFile();
+}
+
 
     private void AddCounterToUI(CounterModel counter)
     {
@@ -119,5 +119,4 @@ public partial class MainPage : ContentPage
 
         CountersStack.Children.Add(counterLayout);
     }
-
 }
