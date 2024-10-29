@@ -9,7 +9,7 @@
     Padding="30">
 
         <Button 
-        Text="Dodaj licznik"
+        Text="Add Counter"
         Clicked="OnAddCounterClicked" />
 
         <ScrollView>
