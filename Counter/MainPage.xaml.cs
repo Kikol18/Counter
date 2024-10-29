@@ -22,8 +22,8 @@ public partial class MainPage : ContentPage
 
         foreach (var counter in _counters)
         {
-            lines.Add(counter.Name);           // Pierwsza linia: nazwa
-            lines.Add(counter.Value.ToString()); // Druga linia: wartość
+            lines.Add(counter.Name);          
+            lines.Add(counter.Value.ToString());
         }
 
         File.WriteAllLines(_filePath, lines);
